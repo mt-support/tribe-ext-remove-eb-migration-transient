@@ -125,6 +125,11 @@ class Tribe__Extension__Remove_Eventbrite_Migration_Transient {
      * @return bool true if successful, false otherwise
      */
     public function maybe_delete_old_transient() {
+        
+        // If a deletion has already run, don't attempt another one.
+        if ( 'true' === get_option( self::$deleted_key ) ) {
+            return false;
+        }
 
         if ( ! $this->old_transient_exists() ) {
             add_option( self::$deleted_key, 'false' );

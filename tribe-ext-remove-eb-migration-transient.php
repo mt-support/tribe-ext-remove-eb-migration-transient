@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Eventbrite Tickets Extension: Clean Up Migration Data
  * Description: Older versions of Eventbrite Tickets would sometimes add a transient with no expiration date. This extension removes that transient if it exists.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Modern Tribe, Inc.
  * Author URI: http://m.tri.be/1971
  * License: GPLv2 or later
@@ -105,6 +105,12 @@ class Tribe__Extension__Remove_Eventbrite_Migration_Transient {
      * @return boolean
      */
     public function old_transient_exists() {
+        
+        // If we're using persistent object caching, we are going to delete the transient in all cases.
+        if ( wp_using_ext_object_cache() ) {
+            return true;
+        }
+        
         $transient         = get_transient( self::$transient_key );
         $transient_timeout = (bool) get_option( '_transient_timeout_' . self::$transient_key );
 
@@ -119,6 +125,11 @@ class Tribe__Extension__Remove_Eventbrite_Migration_Transient {
      * @return bool true if successful, false otherwise
      */
     public function maybe_delete_old_transient() {
+        
+        // If a deletion has already run, don't attempt another one.
+        if ( 'true' === get_option( self::$deleted_key ) ) {
+            return false;
+        }
 
         if ( ! $this->old_transient_exists() ) {
             add_option( self::$deleted_key, 'false' );
